@@ -3,10 +3,16 @@ project(HighFrequencyExecutionSystem VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Find Dependencies
 find_package(OpenSSL REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system thread)
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+set(Boost_NO_BOOST_CMAKE ON)
+find_package(Boost REQUIRED COMPONENTS thread)
+include_directories(${Boost_INCLUDE_DIRS})
 
 # Check for nlohmann_json
 find_package(nlohmann_json QUIET)
@@ -21,12 +27,14 @@ endif()
 include_directories(include)
 
 # Executable
-add_executable(execution_engine src/main.cpp)
+add_executable(execution_engine 
+    src/main.cpp
+    src/market_data/BinanceMarketData.cpp
+)
 
 target_link_libraries(execution_engine PRIVATE 
     OpenSSL::SSL 
     OpenSSL::Crypto 
-    Boost::system 
     Boost::thread
     nlohmann_json::nlohmann_json
 )
