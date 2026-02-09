@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/Users/lucasmariano/Quant/ExecutionSystem/src/OrderGateway.cpp" "CMakeFiles/execution_engine.dir/src/OrderGateway.cpp.o" "gcc" "CMakeFiles/execution_engine.dir/src/OrderGateway.cpp.o.d"
   "/Users/lucasmariano/Quant/ExecutionSystem/src/main.cpp" "CMakeFiles/execution_engine.dir/src/main.cpp.o" "gcc" "CMakeFiles/execution_engine.dir/src/main.cpp.o.d"
   "/Users/lucasmariano/Quant/ExecutionSystem/src/market_data/BinanceMarketData.cpp" "CMakeFiles/execution_engine.dir/src/market_data/BinanceMarketData.cpp.o" "gcc" "CMakeFiles/execution_engine.dir/src/market_data/BinanceMarketData.cpp.o.d"
   )

@@ -1,0 +1,5 @@
+2026-02-09 08:30:58.840 | Strategy Engine started.
+2026-02-09 10:26:33.780 | Strategy Engine started.
+2026-02-09 10:26:36.103 | Forcing 1 trade for OMS/EMS Demo...
+2026-02-09 10:26:36.103 | Executing Arbitrage Strategy at prices: 69249.700000, 0.029590, 2048.910000
+2026-02-09 10:26:36.103 | Sent leg 1 order ID: 1

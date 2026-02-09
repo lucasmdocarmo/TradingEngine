@@ -30,6 +30,7 @@ include_directories(include)
 add_executable(execution_engine 
     src/main.cpp
     src/market_data/BinanceMarketData.cpp
+    src/OrderGateway.cpp
 )
 
 target_link_libraries(execution_engine PRIVATE 

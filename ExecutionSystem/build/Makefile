@@ -129,6 +129,30 @@ execution_engine/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/execution_engine.dir/build.make CMakeFiles/execution_engine.dir/build
 .PHONY : execution_engine/fast
 
+src/OrderGateway.o: src/OrderGateway.cpp.o
+.PHONY : src/OrderGateway.o
+
+# target to build an object file
+src/OrderGateway.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/execution_engine.dir/build.make CMakeFiles/execution_engine.dir/src/OrderGateway.cpp.o
+.PHONY : src/OrderGateway.cpp.o
+
+src/OrderGateway.i: src/OrderGateway.cpp.i
+.PHONY : src/OrderGateway.i
+
+# target to preprocess a source file
+src/OrderGateway.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/execution_engine.dir/build.make CMakeFiles/execution_engine.dir/src/OrderGateway.cpp.i
+.PHONY : src/OrderGateway.cpp.i
+
+src/OrderGateway.s: src/OrderGateway.cpp.s
+.PHONY : src/OrderGateway.s
+
+# target to generate assembly for a file
+src/OrderGateway.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/execution_engine.dir/build.make CMakeFiles/execution_engine.dir/src/OrderGateway.cpp.s
+.PHONY : src/OrderGateway.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -186,6 +210,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... execution_engine"
+	@echo "... src/OrderGateway.o"
+	@echo "... src/OrderGateway.i"
+	@echo "... src/OrderGateway.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

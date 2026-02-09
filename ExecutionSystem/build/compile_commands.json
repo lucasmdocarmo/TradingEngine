@@ -10,5 +10,11 @@
   "command": "/usr/bin/c++  -I/Users/lucasmariano/Quant/ExecutionSystem/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/execution_engine.dir/src/market_data/BinanceMarketData.cpp.o -c /Users/lucasmariano/Quant/ExecutionSystem/src/market_data/BinanceMarketData.cpp",
   "file": "/Users/lucasmariano/Quant/ExecutionSystem/src/market_data/BinanceMarketData.cpp",
   "output": "CMakeFiles/execution_engine.dir/src/market_data/BinanceMarketData.cpp.o"
+},
+{
+  "directory": "/Users/lucasmariano/Quant/ExecutionSystem/build",
+  "command": "/usr/bin/c++  -I/Users/lucasmariano/Quant/ExecutionSystem/include -isystem /opt/homebrew/include -std=gnu++20 -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/execution_engine.dir/src/OrderGateway.cpp.o -c /Users/lucasmariano/Quant/ExecutionSystem/src/OrderGateway.cpp",
+  "file": "/Users/lucasmariano/Quant/ExecutionSystem/src/OrderGateway.cpp",
+  "output": "CMakeFiles/execution_engine.dir/src/OrderGateway.cpp.o"
 }
 ]

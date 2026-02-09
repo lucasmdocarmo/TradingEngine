@@ -9,7 +9,6 @@
 #include <boost/asio/ssl.hpp>
 #include <iostream>
 #include <thread>
-#include <vector>
 
 namespace net = boost::asio;
 namespace ssl = boost::asio::ssl;
@@ -54,6 +53,12 @@ int main() {
             std::cerr << "Warning: Market Data Queue Full! Dropping packet."
                       << std::endl;
           }
+        });
+
+    // Connect Gateway to OrderManager for Execution Reports
+    orderGateway.setExecCallback(
+        [&orderManager](const quant::ExecutionReport &report) {
+          orderManager.onExecutionReport(report);
         });
 
     // Connect to multiple streams: BTCUSDT, ETHBTC, ETHUSDT

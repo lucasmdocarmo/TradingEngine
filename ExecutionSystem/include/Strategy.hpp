@@ -83,10 +83,15 @@ private:
 
         double profit = endUSDT - amountUSDT;
 
-        if (profit > 0.3) {
-          Logger::instance().log("ARBITRAGE OPPORTUNITY FOUND! Profit: " +
-                                 std::to_string(profit));
+        if (profit > 0.3 || !tradeExecuted_) { // FORCE TRADE FOR DEMO
+          if (profit > 0.3) {
+            Logger::instance().log("ARBITRAGE OPPORTUNITY FOUND! Profit: " +
+                                   std::to_string(profit));
+          } else {
+            Logger::instance().log("Forcing 1 trade for OMS/EMS Demo...");
+          }
           executeArbitrage(btcUsdtAsk, ethBtcAsk, ethUsdtBid);
+          tradeExecuted_ = true;
         }
       }
     }
@@ -98,17 +103,28 @@ private:
         ", " + std::to_string(price2) + ", " + std::to_string(price3));
 
     double qty = 0.001;
-    // Note: RiskManager still takes string, we should update it eventually.
-    if (riskManager_.checkOrder("BTCUSDT", Side::Buy, price1, qty)) {
+
+    // Risk Check: Pass current market price (Ask/Bid depending on side)
+    // Leg 1: Buy BTCUSDT. We check against the current Ask (price1).
+    if (riskManager_.checkOrder("BTCUSDT", Side::Buy, price1, qty,
+                                orderBooks_.at(btcUsdtId_).getBestAsk())) {
 
       // Use efficient Integer ID for Order creation
       long long id =
           orderManager_.createOrder(btcUsdtId_, Side::Buy, price1, qty);
 
-      gateway_.sendOrder("BTCUSDT", Side::Buy, price1, qty, OrderType::Market);
+      // Pass ID to Gateway for tracking
+      gateway_.sendOrder("BTCUSDT", Side::Buy, price1, qty, OrderType::Market,
+                         id);
       Logger::instance().log("Sent leg 1 order ID: " + std::to_string(id));
 
-      // ... legs 2 and 3
+      // Update Risk Position immediately (Conservative: assume fill)
+      riskManager_.updatePosition(Side::Buy, qty);
+
+      // Note: We no longer manually call orderManager_.onFill()
+      // The Gateway will trigger onExecutionReport() asynchronously!
+
+      // ... legs 2 and 3 logic (omitted for brevity)
     }
   }
 
@@ -126,6 +142,7 @@ private:
   std::unordered_map<SymbolId, OrderBook> orderBooks_;
 
   std::atomic<bool> running_{true};
+  bool tradeExecuted_{false};
 };
 
 } // namespace quant

@@ -1,14 +1,14 @@
 #pragma once
+#include "ExecutionReport.hpp"
 #include "ObjectPool.hpp"
 #include "OrderGateway.hpp"
 #include "SymbolManager.hpp" // For SymbolId
+#include "Types.hpp"         // For OrderState, Side
 #include <iostream>
 #include <mutex>
 #include <unordered_map>
 
 namespace quant {
-
-enum class OrderState { New, PendingNew, Filled, Canceled, Rejected };
 
 struct Order {
   long long orderId;
@@ -52,21 +52,12 @@ public:
     return id;
   }
 
-  // Update the state of an order
+  // Update the state of an order manually (e.g. from Strategy)
   void updateOrderState(long long orderId, OrderState newState) {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = orders_.find(orderId);
     if (it != orders_.end()) {
       it->second->state = newState;
-
-      // If terminal state, release back to pool (simplification)
-      // In reality we might keep filled orders for PnL tracking until end of
-      // day
-      if (newState == OrderState::Canceled ||
-          newState == OrderState::Rejected) {
-        orderPool_.release(it->second);
-        orders_.erase(it);
-      }
     }
   }
 
@@ -81,7 +72,7 @@ public:
     return nullptr;
   }
 
-  // Track fills
+  // Track fills via explicit method (Legacy/Manual)
   void onFill(long long orderId, double fillQty, double fillPrice) {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = orders_.find(orderId);
@@ -91,12 +82,60 @@ public:
         it->second->state = OrderState::Filled;
         std::cout << "[OM] Order " << orderId << " Filled: " << fillQty << " @ "
                   << fillPrice << std::endl;
-        // Keep filled orders in memory for position tracking, or move to
-        // 'History' pool
       } else {
         std::cout << "[OM] Order " << orderId << " Partial Fill: " << fillQty
                   << " @ " << fillPrice << std::endl;
       }
+    }
+  }
+
+  // PROCESS EXECUTION REPORT (The Core OMS Logic)
+  // This is called by the Gateway when an update arrives from the Exchange.
+  void onExecutionReport(const ExecutionReport &report) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = orders_.find(report.orderId);
+    if (it == orders_.end()) {
+      std::cerr << "[OM] Unknown Order ID in Report: " << report.orderId
+                << std::endl;
+      return;
+    }
+
+    Order *order = it->second;
+
+    switch (report.execType) {
+    case ExecType::New:
+      order->state = OrderState::New;
+      std::cout << "[OM] Order " << order->orderId << " Confirmed New."
+                << std::endl;
+      break;
+
+    case ExecType::PartialFill:
+    case ExecType::Fill:
+      order->filledQuantity = report.cumQty;
+      order->state = report.orderState;
+      if (order->state == OrderState::Filled) {
+        std::cout << "[OM] Order " << order->orderId
+                  << " FILLED! Price: " << report.lastPrice << std::endl;
+      } else {
+        std::cout << "[OM] Order " << order->orderId
+                  << " PARTIAL FILL. CumQty: " << report.cumQty << std::endl;
+      }
+      break;
+
+    case ExecType::Canceled:
+      order->state = OrderState::Canceled;
+      std::cout << "[OM] Order " << order->orderId << " CANCELED." << std::endl;
+      // Release back to pool? Maybe later.
+      break;
+
+    case ExecType::Rejected:
+      order->state = OrderState::Rejected;
+      std::cerr << "[OM] Order " << order->orderId
+                << " REJECTED! Reason: " << report.text << std::endl;
+      break;
+
+    default:
+      break;
     }
   }
 

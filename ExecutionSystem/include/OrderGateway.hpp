@@ -1,40 +1,48 @@
 #pragma once
+#include "Types.hpp"
+#include <chrono>
+#include <functional>
 #include <iostream>
+#include <random>
 #include <string>
+#include <thread>
 
 namespace quant {
 
-// Enum to represent order types
-enum class OrderType { Limit, Market };
+// Forward DECLARATIONS only.
+// Do not include ExecutionReport.hpp here to avoid circular dependency.
+struct ExecutionReport;
 
-// Enum to represent order side
-enum class Side { Buy, Sell };
-
-// Interface for an Order Entry Gateway.
-// In a real system, this would handle TCP connections to the exchange's
-// order entry port (e.g., FIX protocol or REST API).
+// Interface for Order Entry Gateway
 class OrderGateway {
 public:
+  // Define callback type: Takes a const reference to ExecutionReport
+  using ExecCallback = std::function<void(const ExecutionReport &)>;
+
+  OrderGateway() : engine_(std::random_device{}()) {}
   virtual ~OrderGateway() = default;
 
-  // Send a new order implementation
-  virtual void sendOrder(const std::string &symbol, Side side, double price,
-                         double quantity, OrderType type) {
-    // In a real implementation:
-    // 1. Construct the JSON payload or FIX message.
-    // 2. Sign the request with HMAC-SHA256 using the API Secret.
-    // 3. Send via HTTPS/TCP.
+  // Set the callback for execution reports (fills/cancels)
+  void setExecCallback(ExecCallback cb) { execCallback_ = cb; }
 
-    // For simulation/display, we just print the action.
-    std::cout << "[OEG] Sending Order: "
-              << (side == Side::Buy ? "BUY " : "SELL ") << quantity << " of "
-              << symbol << " @ " << price << std::endl;
-  }
+  // Send New Order Single (D)
+  // Non-blocking: Sends request and returns immediately.
+  // Execution Report (8) comes back asynchronously via callback.
+  virtual void sendOrder(const std::string &symbol, Side side, double price,
+                         double quantity, OrderType type, long long orderId);
 
   // Cancel an order
   virtual void cancelOrder(long long orderId) {
     std::cout << "[OEG] Cancelling Order: " << orderId << std::endl;
   }
+
+protected:
+  // Helper to trigger callback safely on a separate thread
+  void triggerCallback(const ExecutionReport &report);
+
+private:
+  ExecCallback execCallback_;
+  std::mt19937 engine_;
 };
 
 } // namespace quant
