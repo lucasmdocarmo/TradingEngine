@@ -2223,6 +2223,7 @@ CMakeFiles/execution_engine.dir/src/main.cpp.o: /Users/lucasmariano/Quant/Execut
   /Users/lucasmariano/Quant/ExecutionSystem/include/LockFreeQueue.hpp \
   /Users/lucasmariano/Quant/ExecutionSystem/include/Logger.hpp \
   /Users/lucasmariano/Quant/ExecutionSystem/include/MarketDataAdapter.hpp \
+  /Users/lucasmariano/Quant/ExecutionSystem/include/MarketDataReplay.hpp \
   /Users/lucasmariano/Quant/ExecutionSystem/include/ObjectPool.hpp \
   /Users/lucasmariano/Quant/ExecutionSystem/include/OrderBook.hpp \
   /Users/lucasmariano/Quant/ExecutionSystem/include/OrderGateway.hpp \
@@ -7640,9 +7641,9 @@ CMakeFiles/execution_engine.dir/src/market_data/BinanceMarketData.cpp.o: /Users/
 
 /opt/homebrew/include/boost/intrusive/pointer_rebind.hpp:
 
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__compare/compare_three_way.h:
-
 /opt/homebrew/include/boost/asio/ssl/detail/handshake_op.hpp:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__compare/compare_three_way.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/stdio.h:
 
@@ -10008,6 +10009,10 @@ CMakeFiles/execution_engine.dir/src/market_data/BinanceMarketData.cpp.o: /Users/
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/min_max_result.h:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/negation.h:
+
+/Users/lucasmariano/Quant/ExecutionSystem/include/MarketDataReplay.hpp:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__debug_utils/sanitizers.h:
 
 /opt/homebrew/include/boost/type_traits/integral_constant.hpp:
@@ -10261,8 +10266,6 @@ CMakeFiles/execution_engine.dir/src/market_data/BinanceMarketData.cpp.o: /Users/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/equal.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/negation.h:
 
 /opt/homebrew/include/boost/beast/core/detail/filtering_cancellation_slot.hpp:
 

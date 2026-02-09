@@ -56,6 +56,18 @@ public:
     return asks_.begin()->first;
   }
 
+  double getBestBidQty() const {
+    if (bids_.empty())
+      return 0.0;
+    return bids_.rbegin()->second;
+  }
+
+  double getBestAskQty() const {
+    if (asks_.empty())
+      return 0.0;
+    return asks_.begin()->second;
+  }
+
   // Calculate the Mid Price: (Best Bid + Best Ask) / 2
   double getMidPrice() const {
     double bb = getBestBid();

@@ -2225,6 +2225,7 @@ CMakeFiles/execution_engine.dir/src/main.cpp.o
  /Users/lucasmariano/Quant/ExecutionSystem/include/LockFreeQueue.hpp
  /Users/lucasmariano/Quant/ExecutionSystem/include/Logger.hpp
  /Users/lucasmariano/Quant/ExecutionSystem/include/MarketDataAdapter.hpp
+ /Users/lucasmariano/Quant/ExecutionSystem/include/MarketDataReplay.hpp
  /Users/lucasmariano/Quant/ExecutionSystem/include/ObjectPool.hpp
  /Users/lucasmariano/Quant/ExecutionSystem/include/OrderBook.hpp
  /Users/lucasmariano/Quant/ExecutionSystem/include/OrderGateway.hpp

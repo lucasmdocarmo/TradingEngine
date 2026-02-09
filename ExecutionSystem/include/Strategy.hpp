@@ -95,6 +95,46 @@ private:
         }
       }
     }
+
+    // New: Check Alpha Signal (Order Book Imbalance)
+    checkAlphaSignal(symId);
+  }
+
+  // Alpha Signal: Order Book Imbalance (OBI)
+  // Formula: (BidQty - AskQty) / (BidQty + AskQty)
+  // Range: [-1, 1]. >0.8 means strong buying pressure.
+  void checkAlphaSignal(SymbolId symId) {
+    if (symId != btcUsdtId_)
+      return; // Only trade BTC for this signal
+
+    const auto &book = orderBooks_.at(symId);
+    double bidQty = book.getBestBidQty();
+    double askQty = book.getBestAskQty();
+    double totalQty = bidQty + askQty;
+
+    if (totalQty <= 0)
+      return;
+
+    double imbalance = (bidQty - askQty) / totalQty;
+
+    if (imbalance > 0.8) {
+      Logger::instance().log(
+          "ALPHA SIGNAL: Strong Buy Pressure on BTCUSDT! Imbalance: " +
+          std::to_string(imbalance));
+
+      double price = book.getBestAsk(); // Cross spread to buy immediately
+      double qty = 0.01;
+
+      if (riskManager_.checkOrder("BTCUSDT", Side::Buy, price, qty,
+                                  book.getBestAsk())) {
+        long long id =
+            orderManager_.createOrder(btcUsdtId_, Side::Buy, price, qty);
+        gateway_.sendOrder("BTCUSDT", Side::Buy, price, qty, OrderType::Market,
+                           id);
+        riskManager_.updatePosition(Side::Buy, qty);
+        Logger::instance().log("Sent Alpha Order ID: " + std::to_string(id));
+      }
+    }
   }
 
   void executeArbitrage(double price1, double price2, double price3) {

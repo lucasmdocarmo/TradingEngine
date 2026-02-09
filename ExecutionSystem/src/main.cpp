@@ -10,10 +10,12 @@
 #include <iostream>
 #include <thread>
 
+#include "MarketDataReplay.hpp" // Added include
+
 namespace net = boost::asio;
 namespace ssl = boost::asio::ssl;
 
-int main() {
+int main(int argc, char *argv[]) { // Updated signature
   try {
     std::cout << "Starting High-Frequency Execution System..." << std::endl;
 
@@ -33,12 +35,22 @@ int main() {
     quant::Strategy strategy(orderGateway, orderManager, riskManager);
 
     // 4. Initialize Market Data Adapter
+    std::shared_ptr<quant::MarketDataAdapter> marketData;
     net::io_context ioc;
-    ssl::context ctx{ssl::context::tlsv12_client};
-    ctx.set_default_verify_paths();
-    ctx.set_verify_mode(ssl::verify_peer);
 
-    auto marketData = std::make_shared<quant::BinanceMarketData>(ioc, ctx);
+    // Check for Replay Mode
+    // Usage: ./execution_engine --replay data.csv
+    if (argc > 2 && std::string(argv[1]) == "--replay") {
+      marketData = std::make_shared<quant::MarketDataReplay>(argv[2]);
+      std::cout << "[Main] Running in REPLAY Mode using " << argv[2]
+                << std::endl;
+    } else {
+      // Live Mode
+      ssl::context ctx{ssl::context::tlsv12_client};
+      ctx.set_default_verify_paths();
+      ctx.set_verify_mode(ssl::verify_peer);
+      marketData = std::make_shared<quant::BinanceMarketData>(ioc, ctx);
+    }
 
     // 5. Connect Components
     // Set the callback on the Market Data Adapter to push to the queue.

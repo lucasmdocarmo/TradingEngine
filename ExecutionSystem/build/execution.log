@@ -1,0 +1,37 @@
+Starting High-Frequency Execution System...
+[Main] Running in REPLAY Mode using ../market_data.csv
+[Replay] Loading market data from ../market_data.csv...
+[Replay] Finished processing 7 ticks.
+System Running. Press Enter to stop...
+2026-02-09 11:22:32.034 | Strategy Engine started.
+2026-02-09 11:22:32.034 | Forcing 1 trade for OMS/EMS Demo...
+2026-02-09 11:22:32.034 | Executing Arbitrage Strategy at prices: 69001.000000, 0.029050, 2001.000000
+2026-02-09 11:22:32.034 | Sent leg 1 order ID: 1
+2026-02-09 11:22:32.034 | ARBITRAGE OPPORTUNITY FOUND! Profit: 1.574710
+2026-02-09 11:22:32.034 | Executing Arbitrage Strategy at prices: 69001.000000, 0.028550, 2001.000000
+2026-02-09 11:22:32.034 | Sent leg 1 order ID: 2
+2026-02-09 11:22:32.034 | ARBITRAGE OPPORTUNITY FOUND! Profit: 1.574710
+2026-02-09 11:22:32.034 | Executing Arbitrage Strategy at prices: 69001.000000, 0.028550, 2001.000000
+2026-02-09 11:22:32.034 | Sent leg 1 order ID: 3
+2026-02-09 11:22:32.034 | ARBITRAGE OPPORTUNITY FOUND! Profit: 1.574710
+2026-02-09 11:22:32.034 | Executing Arbitrage Strategy at prices: 69001.000000, 0.028550, 2001.000000
+2026-02-09 11:22:32.034 | Sent leg 1 order ID: 4
+2026-02-09 11:22:32.034 | ALPHA SIGNAL: Strong Buy Pressure on BTCUSDT! Imbalance: 0.958864
+2026-02-09 11:22:32.034 | Sent Alpha Order ID: 5
+[OM] Order 2 FILLED! Price: 69001
+[OM] Order 4 FILLED! Price: 69001
+[OM] Order 3 FILLED! Price: 69001
+[OM] Order 1 FILLED! Price: 69001
+[OM] Order 5 FILLED! Price: 69001
+
+=== Latency Report: Strategy::onMarketData ===
+Samples: 7
+Min: 916 ns
+Max: 55500 ns
+P50: 2200 ns (2.2 us)
+P99: 49800 ns (49.8 us)
+P99.9: 49800 ns (49.8 us)
+Distribution:
+  0-  1 us: ####### (1)
+  1-  2 us: ####### (1)
+  2-  3 us: ####### (1)
