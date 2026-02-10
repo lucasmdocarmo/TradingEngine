@@ -32,48 +32,59 @@ public:
     size_t next_tail = (current_tail + 1) & (Capacity - 1);
 
     // Check if the queue is full.
-    // We need to load head_ to see where the consumer is.
-    // memory_order_acquire: Ensures that we see the latest value of head_
-    // written by the consumer thread.
-    if (next_tail == head_.load(std::memory_order_acquire)) {
+    // We load head_ with acquire semantics to ensure we see the latest
+    // updates from the consumer.
+    // Full Condition: If (tail + 1) % Capacity == head, the queue is full.
+    size_t current_head = head_.load(std::memory_order_acquire);
+
+    if (next_tail == current_head) {
       return false; // Queue is full
     }
 
-    // Store the item in the buffer.
+    // CRITICAL: We write to the buffer BEFORE we update the tail index.
+    // If we updated tail first, the consumer might read garbage data.
     buffer_[current_tail] = item;
 
-    // Update the tail index to make the new item visible to the consumer.
-    // memory_order_release: Ensures that the write to buffer_[current_tail]
-    // happens BEFORE the update to tail_. The consumer, reading tail_ with
-    // acquire, will then be guaranteed to see the data.
+    // COMMIT: Make the new item visible to the consumer.
+    // memory_order_release: Ensures that all previous writes (line 43)
+    // are completed and visible to any thread that loads 'tail_' with
+    // 'acquire'. This acts as a barrier: "Finish writing data, THEN switch the
+    // flag".
     tail_.store(next_tail, std::memory_order_release);
     return true;
   }
 
   // Pop an item from the queue. Returns true if successful, false if empty.
   // This is called by the CONSUMER thread (Strategy Thread).
+  // Goal: Read data as fast as possible without locking the Producer.
   bool pop(T &item) {
-    // Load the current head index. Only consumer writes to head_, so relaxed is
-    // fine.
+    // Load current head. We own head, so relaxed is fine.
     size_t current_head = head_.load(std::memory_order_relaxed);
 
-    // Check if the queue is empty.
-    // We need to load tail_ to see where the producer has written up to.
-    // memory_order_acquire: Ensures that all writes to buffer_ done by the
-    // producer (before its release-store to tail_) are visible to us here.
-    if (current_head == tail_.load(std::memory_order_acquire)) {
+    // Load current tail to see how much data is available.
+    // memory_order_acquire: Ensures we see all the data writes that happened
+    // before the producer released this tail index.
+    // If we used 'relaxed' here, we might see the updated tail index
+    // BUT read stale/garbage data from buffer_[current_head] due to CPU
+    // reordering.
+    size_t current_tail = tail_.load(std::memory_order_acquire);
+
+    if (current_head == current_tail) {
       return false; // Queue is empty
     }
 
-    // Read the item from the buffer.
+    // Read the item. This is safe because we established a synchronizes-with
+    // relationship via tail_ (release) -> tail_ (acquire).
     item = buffer_[current_head];
 
-    // Calculate the next head position.
+    // Calculate next head position.
     size_t next_head = (current_head + 1) & (Capacity - 1);
 
-    // Update the head index to free up the slot.
-    // memory_order_release: Ensures that our read of the item is finished
-    // before we tell the producer that this slot is free to be overwritten.
+    // COMMIT: Free up the slot for the producer to overwrite.
+    // memory_order_release: Ensures we are done reading 'item' BEFORE
+    // we tell the producer "I'm done with this slot".
+    // If we used 'relaxed', the CPU might reorder this store to happen BEFORE
+    // line 69, causing the producer to overwrite data we haven't read yet!
     head_.store(next_head, std::memory_order_release);
     return true;
   }
@@ -85,15 +96,21 @@ public:
   }
 
 private:
-  std::vector<T> buffer_{Capacity}; // The actual storage
+  // The buffer must be large enough to handle bursts of market data.
+  // Example: 1024 items. At 100 bytes/item, this is ~100KB, fitting in L2
+  // cache.
+  std::vector<T> buffer_{Capacity};
 
-  // alignas(64) ensures that head_ and tail_ are on different cache lines.
-  // This prevents "False Sharing", where one core invalidates the cache line
-  // of another core just because they are accessing adjacent variables.
-  // 64 bytes is the standard cache line size for x86_64 CPUs.
-  alignas(64) std::atomic<size_t> head_; // Index of the next item to read
-  alignas(64)
-      std::atomic<size_t> tail_; // Index where the next item will be written
+  // CACHE LINE PADDING
+  // alignas(64): Forces this variable to start on a new 64-byte cache line.
+  // Why? "False Sharing".
+  // If head_ and tail_ are on the same cache line:
+  // 1. Core 1 writes to head_. This invalidates the cache line on Core 2.
+  // 2. Core 2 tries to read tail_. Cache miss! It has to fetch from RAM/L3.
+  // 3. This ping-ponging destroys performance (can be 100x slower).
+  // By padding, we ensure Core 1 owns Line A and Core 2 owns Line B.
+  alignas(64) std::atomic<size_t> head_;
+  alignas(64) std::atomic<size_t> tail_;
 };
 
 } // namespace quant

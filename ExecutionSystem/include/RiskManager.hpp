@@ -67,27 +67,33 @@ public:
     }
 
     // 4. Order Rate Limit (Throttling)
-    // Simple Token Bucket / sliding window approximation
+    // Why? Exchanges will ban you if you send too many orders per second (DDoS
+    // protection). Algorithm: Token Bucket / Sliding Window approximation. If
+    // we exceed N orders in T milliseconds, we reject.
     auto now = std::chrono::steady_clock::now();
+    // Using steady_clock is critical! system_clock can jump (NTP sync) and
+    // break logic.
     auto timeDiff = std::chrono::duration_cast<std::chrono::milliseconds>(
         now - lastCheckTime_);
 
-    if (timeDiff >= orderCountTimeWindow_) {
-      // Reset window
+    // Reset the window if enough time has passed
+    if (timeDiff >=
+        std::chrono::milliseconds(1000)) { // Fixed 1 sec window for simplicity
       ordersInWindow_ = 0;
       lastCheckTime_ = now;
     }
 
     if (ordersInWindow_ >= maxOrderRate_) {
+      // Log error but don't throw. Just return false.
       std::cerr << "[RISK] REJECTED: Order Rate Limit Exceeded ("
                 << ordersInWindow_ << "/" << maxOrderRate_ << " per sec)"
                 << std::endl;
       return false;
     }
 
-    // If all checks pass, increment counters
+    // If all checks pass, we increment the throttle counter.
     ordersInWindow_++;
-    return true;
+    return true; // Order is Safe to Send
   }
 
   // Update position after a fill (Post-Trade)

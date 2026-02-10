@@ -33,16 +33,27 @@ public:
     orderBooks_.emplace(ethUsdtId_, OrderBook("ETHUSDT"));
   }
 
+  // The Core Loop: Consumes market data from the Lock-Free Queue.
+  // This runs on a dedicated, pinned CPU core (isolated from OS noise).
   void run(LockFreeQueue<BookTicker, 1024> &queue) {
     Logger::instance().log("Strategy Engine started.");
     BookTicker ticker;
 
+    // Busy-Wait Loop (Spinning)
+    // Why? OS Sleep/Wakeup takes microseconds. Spinning takes nanoseconds.
+    // In HFT, 99.9% of CPU time is spent checking "Is there data?".
     while (running_) {
       while (queue.pop(ticker)) {
+        // Latency Measurement: Start clock
         latencyMonitor_.start();
+
         onMarketData(ticker);
+
+        // Latency Measurement: Stop clock
         latencyMonitor_.stop();
       }
+      // Yield to OS only if queue is empty to prevent 100% CPU burn on laptop.
+      // In production, we would NOT yield. We would burn the core.
       std::this_thread::yield();
     }
 
@@ -52,21 +63,32 @@ public:
   void stop() { running_ = false; }
 
 private:
+  // PROCESSED ON EVERY TICK (HOT PATH)
+  // Latency Budget: < 1 microsecond.
   void onMarketData(const BookTicker &ticker) {
-    // Convert string symbol to ID (fast lookup if we cache it,
-    // but here we might need to lookup if the ticker comes blindly)
+    // 1. Symbol Lookup
+    // We Map "BTCUSDT" (string) -> 1 (int) at startup.
+    // Hash map lookups with int keys are O(1) and extremely fast.
     SymbolId symId = SymbolManager::instance().getId(ticker.symbol);
 
+    // 2. Update Order Book
+    // We maintain a local view of the market state.
     auto it = orderBooks_.find(symId);
     if (it != orderBooks_.end()) {
       it->second.updateBid(ticker.best_bid_price, ticker.best_bid_qty);
       it->second.updateAsk(ticker.best_ask_price, ticker.best_ask_qty);
     } else {
-      return;
+      return; // Unknown symbol
     }
 
-    // Check for Triangular Arbitrage Opportunity
-    // We access books directly using stored IDs (Fast!)
+    // 3. Strategy Logic: Triangular Arbitrage
+    // Path: USDT -> BTC -> ETH -> USDT
+    // We need 3 live prices:
+    // A. Ask Price of BTC/USDT (Buying BTC)
+    // B. Ask Price of ETH/BTC (Buying ETH with BTC)
+    // C. Bid Price of ETH/USDT (Selling ETH for USDT)
+
+    // We check existence first (map.count is O(1))
     if (orderBooks_.count(btcUsdtId_) && orderBooks_.count(ethBtcId_) &&
         orderBooks_.count(ethUsdtId_)) {
 
@@ -74,8 +96,13 @@ private:
       double ethBtcAsk = orderBooks_.at(ethBtcId_).getBestAsk();
       double ethUsdtBid = orderBooks_.at(ethUsdtId_).getBestBid();
 
+      // Ensure markets are active (prices > 0)
       if (btcUsdtAsk > 0 && ethBtcAsk > 0 && ethUsdtBid > 0) {
-        // Simple Profit Calc
+        // Calculation:
+        // Start with 100 USDT.
+        // Step 1: Buy BTC.  BTC = 100 / Price(BTCUSDT)
+        // Step 2: Buy ETH.  ETH = BTC / Price(ETHBTC)
+        // Step 3: Sell ETH. USDT = ETH * Price(ETHUSDT)
         double amountUSDT = 100.0;
         double btcAmount = amountUSDT / btcUsdtAsk;
         double ethAmount = btcAmount / ethBtcAsk;
@@ -83,11 +110,14 @@ private:
 
         double profit = endUSDT - amountUSDT;
 
-        if (profit > 0.3 || !tradeExecuted_) { // FORCE TRADE FOR DEMO
+        // Trade Threshold: > 0.3 USDT profit (0.3%)
+        if (profit > 0.3 || !tradeExecuted_) {
+          // Logging is expensive! In prod, log asynchronously or only on fills.
           if (profit > 0.3) {
             Logger::instance().log("ARBITRAGE OPPORTUNITY FOUND! Profit: " +
                                    std::to_string(profit));
           } else {
+            // For this Demo, we force 1 trade to prove the OMS works.
             Logger::instance().log("Forcing 1 trade for OMS/EMS Demo...");
           }
           executeArbitrage(btcUsdtAsk, ethBtcAsk, ethUsdtBid);
@@ -96,16 +126,19 @@ private:
       }
     }
 
-    // New: Check Alpha Signal (Order Book Imbalance)
+    // 4. Strategy Logic: Alpha Signal
     checkAlphaSignal(symId);
   }
 
   // Alpha Signal: Order Book Imbalance (OBI)
-  // Formula: (BidQty - AskQty) / (BidQty + AskQty)
-  // Range: [-1, 1]. >0.8 means strong buying pressure.
+  // Hypothesis: If there are HUGE headers of Buy orders (Bids)
+  // and very few Sell orders (Asks), the price is likely to go UP due to
+  // pressure. Formula: (BidQty - AskQty) / (BidQty + AskQty) Range: [-1, +1].
+  //   +1.0 = All Bids (Strong Buy Pressure)
+  //   -1.0 = All Asks (Strong Sell Pressure)
   void checkAlphaSignal(SymbolId symId) {
     if (symId != btcUsdtId_)
-      return; // Only trade BTC for this signal
+      return; // Simple demo: Only trade BTC
 
     const auto &book = orderBooks_.at(symId);
     double bidQty = book.getBestBidQty();
@@ -117,21 +150,31 @@ private:
 
     double imbalance = (bidQty - askQty) / totalQty;
 
+    // Threshold: > 0.8 (80% more bids than asks)
     if (imbalance > 0.8) {
       Logger::instance().log(
           "ALPHA SIGNAL: Strong Buy Pressure on BTCUSDT! Imbalance: " +
           std::to_string(imbalance));
 
-      double price = book.getBestAsk(); // Cross spread to buy immediately
+      double price = book.getBestAsk(); // Crossing the spread (Taker)
       double qty = 0.01;
 
+      // RISK CHECK: Always check with RiskManager before sending!
       if (riskManager_.checkOrder("BTCUSDT", Side::Buy, price, qty,
                                   book.getBestAsk())) {
+
+        // 1. Create Order in OMS (State: New)
         long long id =
             orderManager_.createOrder(btcUsdtId_, Side::Buy, price, qty);
+
+        // 2. Send to Gateway (Simulated Exchange)
         gateway_.sendOrder("BTCUSDT", Side::Buy, price, qty, OrderType::Market,
                            id);
+
+        // 3. Update Position tracking (Conservative approach: modify exposure
+        // now)
         riskManager_.updatePosition(Side::Buy, qty);
+
         Logger::instance().log("Sent Alpha Order ID: " + std::to_string(id));
       }
     }

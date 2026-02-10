@@ -43,3 +43,33 @@
 2026-02-09 11:22:32.034 | Sent leg 1 order ID: 4
 2026-02-09 11:22:32.034 | ALPHA SIGNAL: Strong Buy Pressure on BTCUSDT! Imbalance: 0.958864
 2026-02-09 11:22:32.034 | Sent Alpha Order ID: 5
+2026-02-09 21:30:25.994 | Strategy Engine started.
+2026-02-09 21:30:25.995 | Forcing 1 trade for OMS/EMS Demo...
+2026-02-09 21:30:25.995 | Executing Arbitrage Strategy at prices: 69001.000000, 0.029050, 2001.000000
+2026-02-09 21:30:25.995 | Sent leg 1 order ID: 1
+2026-02-09 21:30:25.995 | ARBITRAGE OPPORTUNITY FOUND! Profit: 1.574710
+2026-02-09 21:30:25.995 | Executing Arbitrage Strategy at prices: 69001.000000, 0.028550, 2001.000000
+2026-02-09 21:30:25.995 | Sent leg 1 order ID: 2
+2026-02-09 21:30:25.995 | ARBITRAGE OPPORTUNITY FOUND! Profit: 1.574710
+2026-02-09 21:30:25.995 | Executing Arbitrage Strategy at prices: 69001.000000, 0.028550, 2001.000000
+2026-02-09 21:30:25.995 | Sent leg 1 order ID: 3
+2026-02-09 21:30:25.995 | ARBITRAGE OPPORTUNITY FOUND! Profit: 1.574710
+2026-02-09 21:30:25.995 | Executing Arbitrage Strategy at prices: 69001.000000, 0.028550, 2001.000000
+2026-02-09 21:30:25.995 | Sent leg 1 order ID: 4
+2026-02-09 21:30:25.995 | ALPHA SIGNAL: Strong Buy Pressure on BTCUSDT! Imbalance: 0.958864
+2026-02-09 21:30:25.995 | Sent Alpha Order ID: 5
+2026-02-10 08:42:02.230 | Strategy Engine started.
+2026-02-10 08:42:02.231 | Forcing 1 trade for OMS/EMS Demo...
+2026-02-10 08:42:02.231 | Executing Arbitrage Strategy at prices: 69001.000000, 0.029050, 2001.000000
+2026-02-10 08:42:02.231 | Sent leg 1 order ID: 1
+2026-02-10 08:42:02.231 | ARBITRAGE OPPORTUNITY FOUND! Profit: 1.574710
+2026-02-10 08:42:02.231 | Executing Arbitrage Strategy at prices: 69001.000000, 0.028550, 2001.000000
+2026-02-10 08:42:02.231 | Sent leg 1 order ID: 2
+2026-02-10 08:42:02.231 | ARBITRAGE OPPORTUNITY FOUND! Profit: 1.574710
+2026-02-10 08:42:02.231 | Executing Arbitrage Strategy at prices: 69001.000000, 0.028550, 2001.000000
+2026-02-10 08:42:02.231 | Sent leg 1 order ID: 3
+2026-02-10 08:42:02.231 | ARBITRAGE OPPORTUNITY FOUND! Profit: 1.574710
+2026-02-10 08:42:02.231 | Executing Arbitrage Strategy at prices: 69001.000000, 0.028550, 2001.000000
+2026-02-10 08:42:02.231 | Sent leg 1 order ID: 4
+2026-02-10 08:42:02.231 | ALPHA SIGNAL: Strong Buy Pressure on BTCUSDT! Imbalance: 0.958864
+2026-02-10 08:42:02.231 | Sent Alpha Order ID: 5
